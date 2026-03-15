@@ -1,0 +1,42 @@
+services:
+  # Interactive Chat Agent
+  agent:
+    build: .
+    container_name: credit-card-agent
+    volumes:
+      # Persist Gmail OAuth tokens across container restarts
+      - ./.credentials:/app/.credentials
+      # Persist the SQLite database on host
+      - ./offers.db:/app/offers.db
+      # Google OAuth Client ID (needed for first-time Gmail auth)
+      - ./credentials.json:/app/credentials.json
+      # Persist the .env file
+      - ./.env:/app/.env
+      # Persist daily sync lock
+      - ./.last_sync:/app/.last_sync
+    environment:
+      - LMSTUDIO_BASE_URL=${LMSTUDIO_BASE_URL:-http://host.docker.internal:1234/v1}
+      - LMSTUDIO_API_KEY=${LMSTUDIO_API_KEY:-lm-studio}
+      - DATABASE_URL=sqlite:///offers.db
+    # Required for interactive terminal (chat mode)
+    tty: true
+    stdin_open: true
+    # Use host network so container can reach LMStudio on LAN
+    network_mode: host
+
+  # Setup service (run once for initial config)
+  setup:
+    build: .
+    container_name: credit-card-setup
+    volumes:
+      - ./.credentials:/app/.credentials
+      - ./credentials.json:/app/credentials.json
+      - ./.env:/app/.env
+      - ./offers.db:/app/offers.db
+    environment:
+      - DATABASE_URL=sqlite:///offers.db
+    tty: true
+    stdin_open: true
+    network_mode: host
+    command: python setup.py
+    profiles: [ "setup" ]

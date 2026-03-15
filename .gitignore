@@ -1,0 +1,20 @@
+# Secrets
+.env
+credentials.json
+.credentials/
+
+# Database
+offers.db
+chroma_db/
+.last_sync
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/

@@ -1,0 +1,12 @@
+google-api-python-client
+google-auth-oauthlib
+google-auth-httplib2
+sqlalchemy
+pydantic
+openai
+python-dotenv
+beautifulsoup4
+typer
+rich
+chromadb
+mcp
