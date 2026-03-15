@@ -209,7 +209,7 @@ def chat_loop():
         if intent == "recommend":
             search_query = keyword if keyword and keyword != "all" else user_input
             console.print(f"\n[dim cyan]  → Semantic search for '{search_query}'...[/dim cyan]")
-            results = vector_store.search(search_query, top_k=5)
+            results = vector_store.search(search_query, top_k=10)
             email_data = format_semantic_results(results)
             
             console.print(f"[dim cyan]  → Found {len(results)} relevant emails. Analyzing...[/dim cyan]")
@@ -220,7 +220,7 @@ def chat_loop():
         # ── Search (default) ──
         search_query = keyword if keyword and keyword != "all" else user_input
         console.print(f"\n[dim cyan]  → Semantic search for '{search_query}'...[/dim cyan]")
-        results = vector_store.search(search_query, top_k=5)
+        results = vector_store.search(search_query, top_k=10)
         email_data = format_semantic_results(results)
         
         if not results:

@@ -38,7 +38,7 @@ graph TD
         Router -->|"sync"| Orchestrator
         Router -->|"reindex"| ChromaDB
         Router -->|"search / recommend"| SemanticSearch["Semantic Search<br/>(ChromaDB cosine similarity)"]
-        SemanticSearch -->|"Top-5 most<br/>relevant emails"| LLM["LLM Summarizer<br/>or Recommender"]
+        SemanticSearch -->|"Top-10 most<br/>relevant emails"| LLM["LLM Summarizer<br/>or Recommender"]
         LLM -->|"Grounded answer<br/>using only real data"| User
     end
 ```
@@ -101,7 +101,7 @@ The classifier has a **fallback mechanism** — if the LLM call fails (e.g., LM 
 
 #### Step 2 — Semantic Retrieval (No LLM Needed)
 
-The keyword (or full user query) is converted to a vector embedding using the same `all-MiniLM-L6-v2` model, and ChromaDB returns the **5 most semantically similar emails** using cosine distance.
+The keyword (or full user query) is converted to a vector embedding using the same `all-MiniLM-L6-v2` model, and ChromaDB returns the **10 most semantically similar emails** using cosine distance.
 
 This is where semantic search shines over keyword search:
 
@@ -114,7 +114,7 @@ This is where semantic search shines over keyword search:
 
 #### Step 3 — Context Augmentation
 
-The Top-5 retrieved emails are formatted into a structured text block with date, sender, subject, body preview, and similarity score. This block becomes the **context window** for the LLM.
+The Top-10 retrieved emails are formatted into a structured text block with date, sender, subject, body preview, and similarity score. This block becomes the **context window** for the LLM.
 
 ```
 --- Email 1 (similarity: 0.847) ---
@@ -156,7 +156,7 @@ This system is designed for **100% local, offline execution** to guarantee that 
 | **Summarizer** | Reads retrieved emails and summarizes them for the user | Unbounded (streaming) | 0.1 (low creativity) |
 | **Recommender** | Compares retrieved offers and recommends the best credit card | Unbounded (streaming) | 0.1 (low creativity) |
 
-> **Model Flexibility:** You can swap `Llama 3.2 3B` with any model supported by LM Studio (Mistral, Phi-3, Qwen, Gemma, etc.) by simply loading a different model in LM Studio. The app connects via the OpenAI-compatible API at `http://localhost:1234/v1`. Just make sure your model's context length is ≥ 4096 tokens.
+> **Model Flexibility:** You can swap `Llama 3.2 3B` with any model supported by LM Studio (Mistral, Phi-3, Qwen, Gemma, etc.) by simply loading a different model in LM Studio. The app connects via the OpenAI-compatible API at `http://localhost:1234/v1`. Make sure your model's context length is set to **≥ 8192 tokens** in LM Studio settings.
 
 ---
 
