@@ -3,9 +3,15 @@
 > [!WARNING]
 > 🚧 **Work in Progress** — This project is under active development. Features, APIs, and documentation may change without notice.
 
-A privacy-first, AI-powered agent that automatically scans your bank and credit card promotional emails, stores them locally, and answers questions using **Retrieval-Augmented Generation (RAG)** — powered entirely by local Large Language Models running on your machine.
+A privacy-first, AI-powered agent that **centralizes all credit card and bank promotional emails** across multiple accounts and family members into a single, intelligent chat interface — powered entirely by local LLMs and **Retrieval-Augmented Generation (RAG)**.
 
-> **Why this exists:** Indian banks (SBI, HDFC, ICICI, Axis, Amex, etc.) send hundreds of promotional emails about cashback offers, reward point deals, and discounts. These emails pile up unread. This agent reads them all, understands them semantically, and lets you ask questions like *"What offers do I have for Amazon?"* or *"Best card for booking flights?"* — and get accurate, grounded answers backed by your real email data.
+> **Why this exists:** Indian banks (SBI, HDFC, ICICI, Axis, Amex, etc.) send hundreds of promotional emails about cashback offers, reward point deals, and discounts — scattered across different Gmail accounts of different family members. These offers pile up unread and expire unused. This agent pulls them all into one place, understands them semantically, and lets you ask questions like *"What offers do I have for Amazon?"* or *"Best card for booking flights?"* — and get accurate, grounded answers backed by your real email data.
+
+### 🎯 The Vision
+
+1. **Centralize** — Aggregate promotional emails from all banks and all family members' Gmail accounts into a single searchable knowledge base.
+2. **Optimize** — Use semantic search and LLM-powered recommendations to surface the best credit card for every purchase, so no offer goes unused.
+3. **Notify** *(coming soon)* — Proactively alert users with the best available offer based on their spending patterns, before they checkout.
 
 ---
 
@@ -99,10 +105,9 @@ The keyword (or full user query) is converted to a vector embedding using the sa
 
 This is where semantic search shines over keyword search:
 
-| User Query | 
-Semantic Search (current) |
+| User Query | Semantic Search (current) |
 |---|---|
-| "cashback on food"  ✅ Finds Swiggy, Zomato, Dominos, food delivery offers |
+| "cashback on food" | ✅ Finds Swiggy, Zomato, Dominos, food delivery offers |
 | "travel deals" | ✅ Finds flights, hotels, MakeMyTrip, Cleartrip |
 | "loan offers" | ✅ Finds education loans, home loans, car loans, EMI offers |
 | "entertainment"| ✅ Finds BookMyShow, Inox, movie discounts |
@@ -179,24 +184,6 @@ CreditCardOptimizer/
 ├── offers.db              # SQLite database — raw emails source of truth
 └── chroma_db/             # ChromaDB vector index — embeddings + metadata
 ```
-
-### File-by-File Explanation
-
-| File | Lines | What It Does |
-|---|---|---|
-| `chat.py` | 241 | The heart of the app. Runs an interactive `rich` terminal loop. Accepts natural language, calls the LLM to classify intent, performs semantic search via ChromaDB, and calls the LLM again to summarize or recommend based on retrieved emails. |
-| `vector_store.py` | 95 | Wraps ChromaDB's `PersistentClient`. Creates a `promotional_emails` collection using cosine similarity. Handles `add_email()` (with dedup), `search()` (Top-K semantic query), `count()`, and `reindex_from_db()` to rebuild from SQLite. |
-| `orchestrator.py` | 76 | Central coordinator. On `sync`, it authenticates each Gmail account, fetches new emails, stores them in SQLite, and embeds them in ChromaDB. Enforces a daily sync lock via `.last_sync` file. |
-| `gmail_collector.py` | 226 | Handles Gmail API OAuth 2.0 authentication (multi-account). Queries Gmail with a dynamically built filter string matching 60+ Indian bank/NBFC/fintech domains. Paginates through results (Gmail returns max 100 per page). Parses MIME parts to extract `text/plain` and `text/html` bodies, falling back to BeautifulSoup HTML→text conversion. |
-| `database.py` | 103 | SQLAlchemy-based ORM manager. Provides methods: `insert_raw_email()`, `raw_email_exists()`, `get_latest_email_date()` (for incremental sync), `search_raw_emails()` (legacy keyword search), `get_all_active_offers_for_merchant()`, and `get_all_offers()`. |
-| `models.py` | 77 | Defines two SQLAlchemy tables (`raw_emails`, `offers`) and two Pydantic models (`EmailPayload` for Gmail data, `OfferExtraction` for legacy LLM extraction). Includes a `_clean_currency()` utility that strips ₹, Rs., commas from LLM-generated values. |
-| `setup.py` | 70 | Interactive setup wizard using `rich`. Checks for `credentials.json`, creates `.env` if missing (prompts for LM Studio URL), initializes the SQLite schema, and triggers Gmail OAuth for the first account. |
-| `cli.py` | 140 | Typer-based CLI alternative to the chat interface. Commands: `init`, `add-account`, `list-accounts`, `sync`, `recommend <merchant> <amount>`, `list-offers`. Uses `rich` tables for formatted output. |
-| `mcp_server.py` | 78 | Exposes the agent's capabilities as MCP (Model Context Protocol) tools for agent-to-agent interoperability. Tools: `get_best_financial_offer(merchant, amount)` and `list_active_offers_for_merchant(merchant)`. |
-| `llm_extractor.py` | 79 | **Legacy module** — sends raw email text to the LLM and asks it to extract structured JSON (merchant, card_name, discount_percent, etc.). This approach was replaced by RAG because 3B models produce unreliable JSON extraction. Still present for reference. |
-| `recommendation.py` | 43 | **Legacy module** — rule-based recommendation engine. Given a merchant and purchase amount, it queries the `offers` table, filters by date/min_spend, calculates effective savings (applying max_cashback caps), and returns sorted results. Used by the MCP server and CLI. |
-
----
 
 ## 💾 Storage: Why Two Databases?
 
@@ -327,7 +314,7 @@ Once the agent is running, interact using natural language:
 
 ```
 Financial Offer Intelligence Agent (RAG) is online!
-Vector DB: 103 emails indexed
+Vector DB: x emails indexed
 Commands: sync, search, recommend, reindex, exit
 
 You: sync                          → Fetches & embeds new promotional emails from Gmail
@@ -384,19 +371,15 @@ python cli.py list-offers                   # Show all stored offers
 
 ---
 
-## 📦 Dependencies
+## 🗺️ Roadmap
 
-| Package | Version | Purpose |
-|---|---|---|
-| `google-api-python-client` | Latest | Gmail API client |
-| `google-auth-oauthlib` | Latest | OAuth 2.0 authentication flow |
-| `google-auth-httplib2` | Latest | HTTP transport for Google Auth |
-| `sqlalchemy` | Latest | ORM for SQLite database operations |
-| `pydantic` | Latest | Data validation and schema definitions |
-| `openai` | Latest | OpenAI-compatible client (talks to LM Studio) |
-| `python-dotenv` | Latest | Loads `.env` file into environment |
-| `beautifulsoup4` | Latest | HTML email → plain text fallback conversion |
-| `chromadb` | Latest | Vector database with built-in embedding support |
-| `typer` | Latest | CLI framework for the alternative CLI interface |
-| `rich` | Latest | Rich terminal output (colors, tables, prompts) |
-| `mcp` | Latest | Model Context Protocol for agent-to-agent interoperability |
+- [x] Multi-account Gmail sync (aggregate across family members)
+- [x] RAG-powered semantic search and summarization
+- [x] Credit card recommendation engine
+- [x] Docker support with persistent storage
+- [x] MCP server for agent-to-agent interoperability
+- [ ] **Smart Notifications** — Proactively notify users of the best offer to use based on their spending patterns and transaction history
+- [ ] **Spend Tracking Integration** — Connect to UPI/bank statements to auto-detect purchases and trigger offer alerts
+- [ ] **Family Dashboard** — Web UI to visualize all offers across family members in one place
+- [ ] **Offer Expiry Alerts** — Notify before high-value offers expire
+- [ ] **WhatsApp/Telegram Bot** — Chat with the agent outside the terminal
