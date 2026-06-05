@@ -8,6 +8,12 @@ offers.db
 chroma_db/
 .last_sync
 
+# Local KYC artifacts
+models/
+*.gguf
+data/generated/
+modal_outputs/
+
 # Python
 __pycache__/
 *.pyc
