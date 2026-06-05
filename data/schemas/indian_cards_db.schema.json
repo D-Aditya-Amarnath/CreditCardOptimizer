@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Know Your Card Indian Cards Database",
+  "type": "object",
+  "required": ["generated_at", "cards", "sources"],
+  "properties": {
+    "generated_at": { "type": "string" },
+    "cards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["issuer", "card_name", "rules", "source_ids"],
+        "properties": {
+          "issuer": { "type": "string" },
+          "card_name": { "type": "string" },
+          "network": { "type": ["string", "null"] },
+          "rules": {
+            "type": "object",
+            "properties": {
+              "reward_rate": { "type": ["string", "null"] },
+              "lounge_access": { "type": ["string", "null"] },
+              "reward_caps": { "type": ["string", "null"] },
+              "category_exclusions": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "fees": { "type": ["string", "null"] },
+              "validity_notes": { "type": ["string", "null"] }
+            },
+            "additionalProperties": true
+          },
+          "source_ids": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["source_id", "issuer", "url", "source_type", "retrieved_at"],
+        "properties": {
+          "source_id": { "type": "string" },
+          "issuer": { "type": "string" },
+          "url": { "type": "string" },
+          "source_type": { "type": "string" },
+          "retrieved_at": { "type": "string" },
+          "checksum": { "type": ["string", "null"] },
+          "parser_status": { "type": "string" }
+        }
+      }
+    }
+  }
+}
