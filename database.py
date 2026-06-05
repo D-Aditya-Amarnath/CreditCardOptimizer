@@ -610,7 +610,7 @@ class DatabaseManager:
             session.commit()
             return user_session
 
-    def get_session(self, session_id: str) -> Optional[UserSession]:
+    def get_user_session(self, session_id: str) -> Optional[UserSession]:
         with self.get_session() as session:
             s = session.query(UserSession).filter(UserSession.id == session_id).first()
             if s:
@@ -624,7 +624,7 @@ class DatabaseManager:
             session.commit()
 
     def get_user_by_session(self, session_id: str) -> Optional[UserProfile]:
-        user_session = self.get_session(session_id)
+        user_session = self.get_user_session(session_id)
         if not user_session:
             return None
         return self.get_user_by_id(user_session.user_id)
