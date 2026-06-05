@@ -1,265 +1,255 @@
-# Financial Offer Intelligence Agent
+# Know Your Card
 
-A RAG-powered web application that analyzes credit card offers from Gmail emails and provides personalized recommendations with spending insights.
+Know Your Card (KYC) is a private financial offer intelligence app for Indian credit card users. It reads family credit-card offer emails locally, sanitizes them, validates claims against an official bank-rules knowledge base, and recommends the best card for a purchase.
+
+The target system uses a dual architecture:
+
+- **Local PC:** private email ingestion, FastMCP bridge, SQLite, ChromaDB, Gradio UI, and local GGUF inference through `llama-cpp-python`.
+- **Modal Cloud:** heavy background scraping, synthetic data generation, and fine-tuning only. Personal email data must not be sent to Modal.
+
+## Non-Negotiable Constraints
+
+- Final live inference is local-only on a GTX 1050 with 4GB VRAM.
+- Target runtime model is a quantized 3B GGUF model, loaded with `llama-cpp-python`.
+- Final local inference must use JSON grammar/schema enforcement.
+- No OpenAI, Anthropic, or other external LLM APIs are allowed in the final app.
+- Personal email data stays local.
+- Modal credits are reserved for CrewAI scraping, dataset generation, and fine-tuning.
+- UI target is Gradio v4 with a custom dark theme and elemental offer badges.
+
+## Current Branches And Worktrees
+
+The project is split into one shared baseline plus four phase branches:
+
+| Branch | Worktree | Purpose |
+| --- | --- | --- |
+| `kyc/base-prototype-snapshot` | `/home/aditya/CreditCardOptimizer` | Shared prototype baseline and project README |
+| `kyc/phase-1-ingestion-fastmcp` | `/tmp/CreditCardOptimizer-worktrees/kyc-phase-1-ingestion` | IMAP ingestion, sanitizer, FastMCP email bridge |
+| `kyc/phase-2-crew-scraper-modal` | `/tmp/CreditCardOptimizer-worktrees/kyc-phase-2-crew-scraper` | Modal CrewAI official-rules scraper |
+| `kyc/phase-3-modal-finetune` | `/tmp/CreditCardOptimizer-worktrees/kyc-phase-3-finetune` | Modal synthetic data, Unsloth fine-tune, GGUF export |
+| `kyc/phase-4-gradio-rag` | `/tmp/CreditCardOptimizer-worktrees/kyc-phase-4-gradio-rag` | Gradio UI, local llama inference, RAG orchestration |
+
+Check all worktrees:
+
+```bash
+git worktree list
+```
 
 ## Architecture
 
-### Hybrid RAG System
-- **SQLite**: Source of truth for structured data (emails, offers, transactions, user profiles)
-- **ChromaDB**: Semantic search with hierarchical indexing (emails, offer chunks, merchant summaries)
-- **8 RAG Principles**: Semantic boundary chunking, hierarchical indexing, context-aware reranking, retrieval timing control, negative space injections, compression before injection, cross-document conflict detection, retrieval auditing
+```text
+Family inboxes
+   |
+   | local IMAP/Gmail/Outlook read-only access
+   v
+Email sanitizer
+   - strips scripts/styles/hidden nodes/tracking pixels
+   - preserves useful table layout
+   - emits clean JSON email context
+   |
+   v
+FastMCP local bridge
+   - read-only tools
+   - no unnecessary disk persistence
+   |
+   v
+Gradio KYC app
+   |
+   | asks both local sources
+   v
+SQLite + ChromaDB local knowledge base <--- Modal-generated official bank rules
+   |
+   v
+llama-cpp-python 3B GGUF with JSON grammar
+   |
+   v
+Recommendation + structured JSON response
+```
 
-### Core Services
-| Service | Purpose |
-|---------|---------|
-| `chunker.py` | Semantic boundary chunking with HTML structure analysis |
-| `vector_store.py` | Hierarchical ChromaDB indexing with domain boosts |
-| `rag_service.py` | Core RAG pipeline with conflict detection |
-| `conflict_detector.py` | Cross-document offer conflict resolution |
-| `retrieval_planner.py` | Adaptive top_k + intent classification |
-| `prompt_builder.py` | System prompts with negative injections |
-| `context_compressor.py` | Progressive truncation for LLM injection |
-| `retrieval_auditor.py` | Per-query logging and metrics |
-| `merchant_normalizer.py` | 2-layer normalization (rule-based + LLM) |
-| `transaction_parser.py` | Per-bank regex patterns for transaction emails |
-| `spend_analyzer.py` | Category breakdown, trends, frequency |
-| `card_network_service.py` | Card acceptance + earning rate rules |
-| `banner_extractor.py` | HTML via BeautifulSoup, images via Moondream |
-| `structured_extractor.py` | LLM-based offer extraction at ingest |
+## Phase Status
 
-### Web Stack
-- **FastAPI** with Jinja2 templates
-- **HTMX** for progressive enhancement
-- **Tailwind CSS** (CDN)
-- Session-based auth with bcrypt
+### Phase 1: Ingestion And FastMCP
 
----
+Branch: `kyc/phase-1-ingestion-fastmcp`
 
-## Quick Start
+Implemented:
 
-### 1. Setup LM Studio
-1. Download **LM Studio** from https://lmstudio.ai/
-2. Start LM Studio and download these models:
-   - **llama3.2:3b** (or 3b-instruct) - For generation/chat
-   - **nomic-embed-text** - For embeddings (if available in LM Studio, otherwise use local sentence-transformers)
-3. Click "Start Server" in LM Studio - ensure it runs on port `1234`
+- `services/email_sanitizer.py`
+- `services/imap_ingestion.py`
+- `kyc_mcp_server.py`
+- `tests/test_email_sanitizer.py`
 
-### 2. Install Dependencies
+Run tests:
+
 ```bash
-pip install -r requirements.txt
+cd /tmp/CreditCardOptimizer-worktrees/kyc-phase-1-ingestion
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python -m unittest tests.test_email_sanitizer
 ```
 
-### 3. Configure Environment (.env)
+Configure IMAP accounts locally:
+
 ```bash
-LMSTUDIO_BASE_URL=http://localhost:1234/v1
-LMSTUDIO_API_KEY=lm-studio
-DATABASE_URL=sqlite:///offers.db
-SECRET_KEY=change-this-to-a-random-secret-key
+export KYC_IMAP_ACCOUNTS='[
+  {
+    "account_email": "family@example.com",
+    "host": "imap.gmail.com",
+    "username": "family@example.com",
+    "password": "app-password",
+    "mailbox": "INBOX"
+  }
+]'
 ```
 
-### 4. Gmail API Setup
-1. Go to [Google Cloud Console](https://console.cloud.google.com)
-2. Create a project and enable **Gmail API**
-3. Create OAuth credentials (Desktop App)
-4. Download as `credentials.json` to project root
+Run the local email bridge:
 
-### 5. Run the App
 ```bash
-# Option A: Direct Python
-python run.py
-
-# Option B: Docker
-docker-compose up --build
+cd /tmp/CreditCardOptimizer-worktrees/kyc-phase-1-ingestion
+.venv/bin/python kyc_mcp_server.py
 ```
 
-### 6. Access Web UI
-- Open `http://localhost:8000`
-- First visit `/setup` to create account
-- Visit `/sync` to link Gmail accounts
-- Dashboard at `/dashboard` will auto-sync if enabled in settings
+### Phase 2: Modal CrewAI Ground Truth Scraper
 
----
+Branch: `kyc/phase-2-crew-scraper-modal`
 
-> **Note:** If you prefer Ollama, change `.env` to use `OLLAMA_BASE_URL` and pull models via `ollama pull`. Both are supported.
+Implemented:
 
----
+- `modal_jobs/ground_truth_scraper.py`
+- `data/schemas/indian_cards_db.schema.json`
 
-## Project Structure
+The scraper is designed to find official Indian issuer pages and MITC PDFs for HDFC, SBI Card, ICICI, Axis, and Bajaj Finserv, then emit a unified card-rules database.
 
-```
-CreditCardOptimizer/
-├── models.py                    # SQLAlchemy models + Pydantic schemas
-├── database.py                   # DatabaseManager with all CRUD
-├── orchestrator.py               # Email processing pipeline
-├── gmail_collector.py           # Gmail API with 90+ Indian bank domains
-│
-├── services/                     # 8 RAG principles implementation
-│   ├── chunker.py               # Semantic boundary chunking
-│   ├── vector_store.py          # Hierarchical ChromaDB indexing
-│   ├── rag_service.py           # Core RAG pipeline
-│   ├── conflict_detector.py     # Cross-doc conflict detection
-│   ├── retrieval_planner.py    # Adaptive retrieval timing
-│   ├── prompt_builder.py       # Negative injections
-│   ├── context_compressor.py   # Compression before injection
-│   ├── retrieval_auditor.py    # Retrieval auditing
-│   ├── merchant_normalizer.py  # 2-layer merchant normalization
-│   ├── transaction_parser.py   # Per-bank transaction parsing
-│   ├── spend_analyzer.py       # Spend pattern analysis
-│   ├── card_network_service.py # Card acceptance + earning rules
-│   ├── banner_extractor.py     # HTML/image extraction
-│   └── structured_extractor.py # LLM offer extraction
-│
-├── backend/
-│   ├── main.py                 # FastAPI app + routes
-│   ├── config.py               # Settings from .env
-│   ├── deps.py                 # Auth dependency injection
-│   ├── routers/                 # API endpoints
-│   │   ├── dashboard.py        # Dashboard API
-│   │   ├── chat.py             # Streaming chat (SSE)
-│   │   ├── offers.py           # Offer list + compare
-│   │   ├── user.py             # Card CRUD
-│   │   ├── emails.py           # Email browser + sync
-│   │   ├── notifications.py   # Notification API
-│   │   ├── profiles.py         # Profile CRUD
-│   │   ├── accounts.py         # Account linking + sync stream
-│   │   ├── transactions.py     # Transaction history + spend API
-│   │   └── settings.py         # User settings
-│   └── templates/              # Jinja2 HTML templates
-│       ├── base.html           # Nav + Tailwind + HTMX
-│       ├── dashboard.html      # Stats + expiring offers
-│       ├── chat.html           # Streaming chat UI
-│       ├── compare.html        # Offer comparison
-│       ├── cards.html         # Card management
-│       ├── transactions.html   # Transaction history
-│       ├── spend_analysis.html # Spend patterns
-│       ├── emails.html        # Email browser
-│       ├── sync.html          # Account sync UI
-│       ├── profiles.html      # Profile management
-│       ├── settings.html      # Auto-sync settings
-│       └── loading.html       # SSE sync progress
-│
-├── static/
-│   ├── style.css               # Custom styles
-│   └── app.js                  # HTMX config + polling
-│
-├── .env                        # Environment config
-├── requirements.txt            # Python dependencies
-├── docker-compose.yml         # Docker setup
-├── Dockerfile                 # Container definition
-└── run.py                     # Convenience runner
-```
+Run locally through Modal:
 
----
-
-## API Endpoints
-
-### Pages (HTML)
-| Endpoint | Description |
-|----------|-------------|
-| `/setup` | First-time account creation |
-| `/login` | Login page |
-| `/dashboard` | Main dashboard |
-| `/chat/chat` | RAG chat interface |
-| `/compare` | Offer comparison |
-| `/cards` | Card management |
-| `/transactions` | Transaction history |
-| `/spend-analysis` | Spend patterns |
-| `/emails` | Email browser |
-| `/sync` | Account sync |
-| `/profiles` | Family profiles |
-| `/settings` | User settings |
-| `/loading` | SSE sync progress |
-
-### API Endpoints (JSON)
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/dashboard/summary` | GET | Dashboard stats |
-| `/api/offers` | GET | List offers |
-| `/api/offers/compare` | GET | Compare offers + card recommendations |
-| `/api/offers/search` | GET | Semantic search |
-| `/api/cards` | GET/POST | List/Add cards |
-| `/api/transactions` | GET | List transactions |
-| `/api/transactions/spend-pattern` | GET | Spend analysis |
-| `/api/emails` | GET | List emails |
-| `/api/accounts/sync-stream` | GET | SSE sync events |
-| `/api/profiles` | GET/POST | List/Create profiles |
-| `/api/settings` | GET/PUT | Get/Update settings |
-| `/api/chat` | GET | Streaming chat (SSE) |
-
----
-
-## Database Schema
-
-### Core Tables
-- `raw_emails` - Gmail emails (with email_type: promotional/transactional)
-- `offers` - Extracted credit card offers
-- `banner_offers` - Banner images + extracted text
-- `chunks` - Semantic chunks from emails
-- `transactions` - Parsed transaction records
-
-### User Tables
-- `user_profiles` - User accounts
-- `user_cards` - User's credit cards
-- `user_settings` - Auto-sync preferences
-- `profile_account_mappings` - Profile ↔ Gmail account links
-
-### Supporting Tables
-- `merchant_normalizations` - Raw → normalized merchant mappings
-- `card_network_rules` - Card acceptance + earning rates
-- `notifications` - In-app notifications
-- `retrieval_audit` - RAG query logs
-- `sync_history` - Sync run history
-
----
-
-## Indian Bank/NBFC Domains (~90 domains)
-
-The system recognizes Indian financial domains including:
-- HDFC Bank, SBI, ICICI, Axis Bank, Kotak
-- American Express, Citibank, HSBC
-- Bajaj Finserv, Capital Float, Zip
-- And more...
-
----
-
-## Card Network Rules
-
-Pre-seeded rules for common cards:
-- American Express (Amex)
-- HDFC Regalia Gold
-- HDFC MoneyBack+
-- SBI Card PRIME
-- ICICI Amazon Pay
-- Axis Ace
-
-Each rule includes:
-- `base_earning_percent` - Base reward rate
-- `category_earnings` - Category-specific rates
-- `accelerated_merchants` - Bonus earning merchants
-- `excluded_merchants` - Merchants where card not accepted
-
----
-
-## Troubleshooting
-
-### Ollama Connection
-Ensure Ollama is running:
 ```bash
-ollama serve
+cd /tmp/CreditCardOptimizer-worktrees/kyc-phase-2-crew-scraper
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+modal run modal_jobs/ground_truth_scraper.py
 ```
 
-### Gmail Authentication
-If OAuth token expires, delete `.credentials/token.json` and re-authenticate.
+Expected output:
 
-### Database Issues
-Delete `offers.db` and `chroma_db/` to start fresh:
+- `indian_cards_db.json`
+- source manifest with URL, retrieval timestamp, checksum, and parser status
+- Chroma/SQLite ingestion-ready card rules
+
+### Phase 3: Modal Fine-Tuning Pipeline
+
+Branch: `kyc/phase-3-modal-finetune`
+
+Implemented:
+
+- `modal_jobs/synthetic_data.py`
+- `modal_jobs/finetune_unsloth.py`
+- `modal_jobs/export_gguf.py`
+- `data/schemas/offer_extraction.schema.json`
+
+Run sequence:
+
 ```bash
-rm offers.db
-rm -rf chroma_db
+cd /tmp/CreditCardOptimizer-worktrees/kyc-phase-3-finetune
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+modal run modal_jobs/synthetic_data.py --count 1000
+modal run modal_jobs/finetune_unsloth.py
+modal run modal_jobs/export_gguf.py
 ```
 
-### Port Already in Use
-If port 8000 is busy, run with custom port:
-```bash
-python -c "from backend.main import app; import uvicorn; uvicorn.run(app, host='0.0.0.0', port=8080)"
+Final artifact should be downloaded into a local ignored model directory such as:
+
+```text
+models/kyc-qwen3b-q4.gguf
 ```
+
+### Phase 4: Gradio UI And Local RAG
+
+Branch: `kyc/phase-4-gradio-rag`
+
+Implemented:
+
+- `app_gradio.py`
+- `static/kyc_theme.css`
+- `services/local_llama.py`
+- `services/kyc_rag_engine.py`
+
+Run:
+
+```bash
+cd /tmp/CreditCardOptimizer-worktrees/kyc-phase-4-gradio-rag
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+export KYC_GGUF_MODEL_PATH=/home/aditya/CreditCardOptimizer/models/kyc-qwen3b-q4.gguf
+export KYC_MCP_COMMAND="/tmp/CreditCardOptimizer-worktrees/kyc-phase-1-ingestion/.venv/bin/python /tmp/CreditCardOptimizer-worktrees/kyc-phase-1-ingestion/kyc_mcp_server.py"
+.venv/bin/python app_gradio.py
+```
+
+Open:
+
+```text
+http://127.0.0.1:7860
+```
+
+## Existing Prototype Components
+
+The baseline still includes the earlier FastAPI/RAG prototype:
+
+- `backend/` for FastAPI routes and Jinja templates
+- `database.py` for SQLAlchemy models and CRUD
+- `models.py` for SQLAlchemy and Pydantic schemas
+- `services/vector_store.py` for ChromaDB indexing
+- `services/rag_service.py` for the older LM Studio style RAG flow
+- `gmail_collector.py` and `orchestrator.py` for the Gmail API ingest path
+- `mcp_server.py` for the earlier offer recommendation MCP server
+
+These are useful references, but the final KYC app should use the Phase 1 and Phase 4 local-only path.
+
+## Environment Variables
+
+| Variable | Purpose |
+| --- | --- |
+| `DATABASE_URL` | SQLite URL, defaults to `sqlite:///offers.db` |
+| `KYC_IMAP_ACCOUNTS` | JSON array of local IMAP account configs |
+| `KYC_IMAP_ACCOUNTS_FILE` | Path to local IMAP account config JSON |
+| `KYC_GGUF_MODEL_PATH` | Path to local quantized 3B GGUF model |
+| `KYC_LLAMA_N_CTX` | Context length for local llama |
+| `KYC_LLAMA_N_GPU_LAYERS` | GPU layers for GTX 1050 tuning |
+| `KYC_MCP_COMMAND` | Command used by Phase 4 to start/call the Phase 1 MCP bridge |
+
+Do not commit secrets, app passwords, OAuth tokens, Chroma data, SQLite files, or GGUF model artifacts.
+
+## Development Workflow
+
+Commit baseline changes:
+
+```bash
+cd /home/aditya/CreditCardOptimizer
+git status --short
+git add -A
+git commit -m "Describe baseline change"
+```
+
+Commit phase worktree changes:
+
+```bash
+cd /tmp/CreditCardOptimizer-worktrees/kyc-phase-1-ingestion
+git status --short
+git add -A
+git commit -m "Describe phase change"
+```
+
+Merge baseline into a phase:
+
+```bash
+cd /tmp/CreditCardOptimizer-worktrees/kyc-phase-4-gradio-rag
+git merge --no-edit kyc/base-prototype-snapshot
+```
+
+## Immediate Next Build Steps
+
+1. Harden Phase 1 IMAP filtering with issuer-domain search queries and UID checkpointing.
+2. Add JSON schema validation to Phase 4 local llama responses.
+3. Add a local importer that converts Phase 2 `indian_cards_db.json` into SQLite and ChromaDB.
+4. Replace older OpenAI-compatible LM Studio calls in the final path with `services/local_llama.py`.
+5. Run a full local smoke test once a GGUF model is present.
