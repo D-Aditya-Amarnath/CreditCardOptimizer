@@ -27,3 +27,10 @@ crewai
 crewai_tools
 scrapfly-sdk
 pypdf
+unsloth
+trl
+transformers
+datasets
+accelerate
+peft
+jsonschema

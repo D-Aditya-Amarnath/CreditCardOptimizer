@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Know Your Card Offer Extraction Pair",
+  "type": "object",
+  "required": ["input", "output"],
+  "properties": {
+    "input": {
+      "type": "object",
+      "required": ["subject", "messy_email_text"],
+      "properties": {
+        "subject": { "type": "string" },
+        "messy_email_text": { "type": "string" },
+        "bank_name": { "type": ["string", "null"] }
+      }
+    },
+    "output": {
+      "type": "object",
+      "required": ["bank_name", "offers"],
+      "properties": {
+        "bank_name": { "type": "string" },
+        "offers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["merchant", "card_name", "offer_type"],
+            "properties": {
+              "merchant": { "type": ["string", "null"] },
+              "card_name": { "type": ["string", "null"] },
+              "offer_type": { "type": ["string", "null"] },
+              "discount_percent": { "type": ["number", "null"] },
+              "min_spend": { "type": ["number", "null"] },
+              "max_cashback": { "type": ["number", "null"] },
+              "valid_from": { "type": ["string", "null"] },
+              "valid_until": { "type": ["string", "null"] },
+              "category": { "type": ["string", "null"] }
+            }
+          }
+        }
+      }
+    }
+  }
+}
