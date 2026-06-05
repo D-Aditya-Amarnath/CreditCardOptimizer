@@ -1,35 +1,14 @@
 services:
   app:
     build: .
-    container_name: offer-agent-web
+    container_name: know-your-card
     ports:
-      - "8000:8000"
+      - "7860:7860"
     volumes:
-      - ./credentials:/app/credentials
       - ./offers.db:/app/offers.db
-      - ./credentials.json:/app/credentials.json
-      - ./.env:/app/.env
-      - ./.last_sync:/app/.last_sync
       - ./chroma_db:/app/chroma_db
-    environment:
-      - LMSTUDIO_BASE_URL=http://host.docker.internal:1234/v1
-      - LMSTUDIO_API_KEY=lm-studio
-      - DATABASE_URL=sqlite:///offers.db
-      - SECRET_KEY=change-this-in-production
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-
-  setup:
-    build: .
-    container_name: offer-agent-setup
-    volumes:
-      - ./credentials:/app/credentials
-      - ./credentials.json:/app/credentials.json
-      - ./.env:/app/.env
-      - ./offers.db:/app/offers.db
+      - ./models:/app/models
     environment:
       - DATABASE_URL=sqlite:///offers.db
-    tty: true
-    stdin_open: true
-    command: python setup.py
-    profiles: [setup]
+      - KYC_GGUF_MODEL_PATH=/app/models/qwen2.5-coder-3b-instruct-q4_k_m.gguf
+      - KYC_MCP_COMMAND=python /app/kyc_mcp_server.py
