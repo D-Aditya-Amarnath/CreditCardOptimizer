@@ -22,3 +22,8 @@ uvicorn
 python-multipart
 passlib
 bcrypt
+modal
+crewai
+crewai_tools
+scrapfly-sdk
+pypdf
