@@ -7,7 +7,17 @@ from typing import Any
 import modal
 
 
-TARGET_ISSUERS = ["HDFC", "SBI Card", "ICICI", "Axis", "Bajaj Finserv"]
+TARGET_ISSUERS = [
+    "HDFC Bank", "SBI Card", "ICICI Bank", "Axis Bank", "Bajaj Finserv", 
+    "American Express India", "Kotak Mahindra Bank", "YES Bank", "IDFC FIRST Bank", 
+    "RBL Bank", "IndusInd Bank", "Standard Chartered Bank India", "BOB Financial", 
+    "Union Bank of India", "Punjab National Bank", "Canara Bank", "HSBC India", 
+    "AU Small Finance Bank", "Federal Bank", "South Indian Bank", "CSB Bank", 
+    "DBS Bank India", "Bank of India", "Indian Bank", "Bank of Maharashtra", 
+    "Central Bank of India", "Indian Overseas Bank", "UCO Bank", "Punjab & Sind Bank", 
+    "Karur Vysya Bank", "Karnataka Bank", "City Union Bank", "Tamilnad Mercantile Bank", 
+    "Dhanlaxmi Bank", "J&K Bank", "SBM Bank India"
+]
 OUTPUT_DIR = Path("/tmp/kyc_ground_truth")
 
 image = (
@@ -99,7 +109,10 @@ def run_crewai_scrape() -> dict[str, Any]:
         Task(
             description=(
                 "Find official URLs and MITC PDF URLs for these issuers: "
-                f"{', '.join(TARGET_ISSUERS)}. Return issuer, URL, source type, and notes."
+                f"{', '.join(TARGET_ISSUERS)}. "
+                "CRITICAL INSTRUCTION: The RBI has made it compulsory for Indian banks to use the '.bank.in' domain. "
+                "You MUST prioritize finding and using URLs that end in '.bank.in' (e.g., hdfc.bank.in, icici.bank.in) for all banking institutions. "
+                "Return issuer, URL, source type, and notes."
             ),
             expected_output="A source manifest table with official URLs and MITC PDFs.",
             agent=navigator,
