@@ -4,9 +4,9 @@ import os
 from dataclasses import dataclass
 from typing import Any, Optional
 
-from database import DatabaseManager
-from services.local_llama import LocalLlamaJsonGenerator
-from services.vector_store import HierarchicalVectorStore
+from shared_core.database import DatabaseManager
+from agent4_gradio_rag.local_llama import LocalLlamaJsonGenerator
+from shared_core.vector_store import HierarchicalVectorStore
 
 
 @dataclass
@@ -19,7 +19,7 @@ class McpEmailClient:
     """Small MCP stdio client for the Phase 1 read-only email bridge."""
 
     def __init__(self, command: Optional[str] = None):
-        self.command = command or os.getenv("KYC_MCP_COMMAND", "python kyc_mcp_server.py")
+        self.command = command or os.getenv("KYC_MCP_COMMAND", "python agent1_ingestion/kyc_mcp_server.py")
 
     def list_recent_sanitized_emails(self, limit: int = 10, account_email: Optional[str] = None) -> list[dict[str, Any]]:
         return asyncio.run(self._call_tool("list_recent_sanitized_emails", {

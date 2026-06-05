@@ -22,7 +22,7 @@ Build the local privacy-preserving data bridge for Know Your Card. Personal emai
   - Secure multi-account IMAP iterator for family Gmail/Outlook inboxes.
   - Config from environment or local config file excluded from git.
   - UID/window based incremental scan.
-- `mcp_server.py` or `kyc_mcp_server.py`
+- `mcp_server.py` or `agent1_ingestion/kyc_mcp_server.py`
   - Use `mcp.server.fastmcp.FastMCP`.
   - Expose read-only tools such as `list_recent_sanitized_emails`, `get_email_context`, and `search_recent_emails`.
   - No write tools.
@@ -56,7 +56,7 @@ Build the heavy cloud dataset generation scraper for official Indian credit card
   - Bank Navigator Agent using `SerperDevTool` for official URLs and MITC PDFs.
   - Web/PDF extractor tasks for HDFC, SBI, ICICI, Axis, and Bajaj.
   - JSON Structurer Agent that emits a unified card/rules schema.
-- `data/schemas/indian_cards_db.schema.json`
+- `agent2_ground_truth/schemas/indian_cards_db.schema.json`
 - Export logic for:
   - `data/generated/indian_cards_db.json`
   - ChromaDB artifact or ingestion-ready markdown chunks.
@@ -94,7 +94,7 @@ Create the cloud-only pipeline that synthesizes offer extraction examples, light
   - Merge/export path.
   - Quantize to 4-bit GGUF.
   - Download/sync instructions for local artifact directory excluded from git.
-- `data/schemas/offer_extraction.schema.json`
+- `agent2_ground_truth/schemas/offer_extraction.schema.json`
 
 ## Acceptance Criteria
 - Synthetic examples validate against schema.
@@ -117,14 +117,14 @@ Build the local Know Your Card UI and inference runtime. This is the final priva
 - Personal email data must stay local.
 
 ## Deliverables
-- `app_gradio.py` or `kyc_app.py`
+- `agent4_gradio_rag/app_gradio.py` or `kyc_app.py`
   - `gr.Blocks` layout:
     - left `gr.Column(scale=1)` for user/family account selection.
     - center `gr.Column(scale=2)` for chat.
     - right `gr.Column(scale=1)` for active offers HTML.
   - `gr.Theme(primary_hue="orange", secondary_hue="blue", neutral_hue="slate")`.
   - Deep navy/charcoal dark-mode styling.
-- `static/kyc_theme.css`
+- `agent4_gradio_rag/static/kyc_theme.css`
   - `.fire-badge`, `.water-badge`, `.wind-badge`, `.lightning-badge`, `.earth-badge`.
 - `services/local_llama.py`
   - `llama-cpp-python` loader for 3B GGUF.

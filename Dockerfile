@@ -17,4 +17,4 @@ COPY . .
 
 EXPOSE 7860
 
-CMD ["python", "app_gradio.py"]
+CMD ["python", "agent4_gradio_rag/app_gradio.py"]

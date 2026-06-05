@@ -7,7 +7,7 @@ from mcp.server.fastmcp import FastMCP
 from mcp.shared.exceptions import McpError
 from mcp.types import ErrorData, INTERNAL_ERROR
 
-from services.imap_ingestion import ImapIngestionClient, load_imap_accounts_from_env
+from agent1_ingestion.imap_ingestion import ImapIngestionClient, load_imap_accounts_from_env
 
 
 class KycEmailContextServer:

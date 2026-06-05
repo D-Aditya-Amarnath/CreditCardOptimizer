@@ -260,7 +260,7 @@ class HierarchicalVectorStore:
         }
 
     def reindex_from_db(self, db_manager) -> int:
-        from models import RawEmailModel, ChunkModel
+        from shared_core.models import RawEmailModel, ChunkModel
         indexed = 0
 
         with db_manager.get_session() as session:

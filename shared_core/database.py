@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import Optional, List
 from sqlalchemy import create_engine, text, and_, or_, func
 from sqlalchemy.orm import sessionmaker
-from models import (
+from shared_core.models import (
     Base, RawEmailModel, OfferModel, BannerOfferModel, ChunkModel,
     UserProfile, UserCard, UserSession, NotificationModel,
     RetrievalAuditModel, SyncHistory, EmailPayload, BannerResult,

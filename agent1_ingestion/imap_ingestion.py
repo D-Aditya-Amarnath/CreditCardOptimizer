@@ -7,7 +7,7 @@ from email.message import Message
 from email.utils import parsedate_to_datetime
 from typing import Iterable, Iterator, Optional
 
-from services.email_sanitizer import EmailSanitizer, SanitizedEmail
+from agent1_ingestion.email_sanitizer import EmailSanitizer, SanitizedEmail
 
 
 @dataclass(frozen=True)

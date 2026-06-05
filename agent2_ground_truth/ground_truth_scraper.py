@@ -115,7 +115,7 @@ def run_crewai_scrape() -> dict[str, Any]:
         Task(
             description=(
                 "Return a JSON object with keys generated_at, cards, and sources matching "
-                "data/schemas/indian_cards_db.schema.json."
+                "agent2_ground_truth/schemas/indian_cards_db.schema.json."
             ),
             expected_output="Strict JSON only.",
             agent=structurer,

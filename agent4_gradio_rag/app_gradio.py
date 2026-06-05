@@ -4,11 +4,11 @@ from typing import Optional
 
 import gradio as gr
 
-from database import DatabaseManager
-from services.kyc_rag_engine import KycRagEngine
+from shared_core.database import DatabaseManager
+from agent4_gradio_rag.kyc_rag_engine import KycRagEngine
 
 
-CSS_PATH = "static/kyc_theme.css"
+CSS_PATH = "agent4_gradio_rag/static/kyc_theme.css"
 
 
 def build_theme() -> gr.Theme:
