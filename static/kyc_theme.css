@@ -1,0 +1,89 @@
+:root {
+    --kyc-bg: #08111f;
+    --kyc-panel: #111827;
+    --kyc-panel-soft: #172033;
+    --kyc-text: #e5edf7;
+    --kyc-muted: #94a3b8;
+    --kyc-border: rgba(148, 163, 184, 0.22);
+}
+
+.gradio-container {
+    background: var(--kyc-bg) !important;
+    color: var(--kyc-text) !important;
+}
+
+.kyc-shell {
+    min-height: 100vh;
+}
+
+.kyc-sidebar,
+.kyc-offers-pane,
+.kyc-chat-pane {
+    background: var(--kyc-panel);
+    border: 1px solid var(--kyc-border);
+    border-radius: 8px;
+    padding: 14px;
+}
+
+.kyc-offer-card {
+    background: var(--kyc-panel-soft);
+    border: 1px solid var(--kyc-border);
+    border-radius: 8px;
+    margin: 8px 0;
+    padding: 10px 12px;
+}
+
+.kyc-offer-title {
+    color: var(--kyc-text);
+    font-weight: 650;
+    margin-bottom: 4px;
+}
+
+.kyc-offer-meta {
+    color: var(--kyc-muted);
+    font-size: 0.9rem;
+}
+
+.elemental-badge {
+    border-radius: 999px;
+    color: #fff;
+    display: inline-block;
+    font-size: 0.76rem;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 6px;
+    padding: 6px 9px;
+}
+
+.fire-badge {
+    background: linear-gradient(135deg, #dc2626, #f97316);
+}
+
+.water-badge {
+    background: linear-gradient(135deg, #2563eb, #06b6d4);
+}
+
+.wind-badge {
+    background: linear-gradient(135deg, #22c55e, #f8fafc);
+    color: #102012;
+}
+
+.lightning-badge {
+    background: linear-gradient(135deg, #facc15, #38bdf8);
+    color: #0f172a;
+}
+
+.earth-badge {
+    background: linear-gradient(135deg, #854d0e, #166534);
+}
+
+.kyc-json {
+    background: #0b1220;
+    border: 1px solid var(--kyc-border);
+    border-radius: 8px;
+    color: #dbeafe;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.82rem;
+    overflow-x: auto;
+    padding: 10px;
+}

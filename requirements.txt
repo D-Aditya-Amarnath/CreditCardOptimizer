@@ -34,3 +34,5 @@ datasets
 accelerate
 peft
 jsonschema
+gradio>=4,<5
+llama-cpp-python>=0.2.90
