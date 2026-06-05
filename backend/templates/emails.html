@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Emails - OfferAgent{% endblock %}
+{% block content %}
+<div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">Emails</h1>
+    <p class="text-gray-500 text-sm">{{ total }} emails indexed</p>
+</div>
+
+<div class="card">
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">From</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Subject</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+                {% for email in emails %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-3 text-sm text-gray-700 truncate max-w-[200px]">{{ email.sender }}</td>
+                    <td class="px-4 py-3 text-sm truncate max-w-[300px]">{{ email.subject }}</td>
+                    <td class="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">{{ email.date_received.strftime('%b %d, %Y') if email.date_received else 'N/A' }}</td>
+                    <td class="px-4 py-3">
+                        <span class="badge {% if email.processed_status == 'EXTRACTED' %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-600{% endif %}">
+                            {{ email.processed_status }}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3">
+                        <button onclick="viewEmail('{{ email.email_id }}')" class="text-blue-600 hover:underline text-sm">View</button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="px-4 py-8 text-center text-gray-500">
+                        No emails yet. <a href="/sync" class="text-blue-600 hover:underline">Sync emails</a> to get started.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if total_pages > 1 %}
+<div class="flex justify-center gap-2 mt-4">
+    {% for p in range(1, total_pages + 1) %}
+    <a href="/emails?page={{ p }}" class="px-3 py-1 rounded {% if p == page %}bg-blue-600 text-white{% else %}bg-gray-100{% endif %}">{{ p }}</a>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div id="email-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-hidden">
+        <div class="flex items-center justify-between p-4 border-b border-gray-200">
+            <h3 id="modal-title" class="font-semibold truncate flex-1"></h3>
+            <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700 ml-4"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="modal-content" class="p-4 overflow-y-auto" style="max-height: calc(90vh - 120px);"></div>
+    </div>
+</div>
+
+<script>
+function viewEmail(id) {
+    fetch(`/api/emails/${id}`)
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('modal-title').textContent = data.subject || 'Email';
+            let html = `
+                <div class="mb-4 text-sm text-gray-500">
+                    <div><strong>From:</strong> ${data.sender || 'N/A'}</div>
+                    <div><strong>Date:</strong> ${data.date_received ? new Date(data.date_received).toLocaleString() : 'N/A'}</div>
+                    <div><strong>Account:</strong> ${data.account_email || 'N/A'}</div>
+                </div>
+                <div class="prose prose-sm max-w-none">
+                    <pre class="whitespace-pre-wrap text-sm text-gray-700 bg-gray-50 p-4 rounded-lg overflow-x-auto">${data.body_text || 'No text content'}</pre>
+                </div>
+            `;
+            if (data.banners && data.banners.length > 0) {
+                html += '<h4 class="font-semibold mt-4 mb-2">Banner Content:</h4>';
+                data.banners.forEach(b => {
+                    html += `<div class="bg-gray-50 p-3 rounded-lg mb-2 text-sm"><code class="text-xs text-gray-500">${b.banner_url}</code><p class="mt-1">${b.extracted_text || 'No text extracted'}</p></div>`;
+                });
+            }
+            document.getElementById('modal-content').innerHTML = html;
+            document.getElementById('email-modal').classList.remove('hidden');
+        });
+}
+
+function closeModal() {
+    document.getElementById('email-modal').classList.add('hidden');
+}
+</script>
+{% endblock %}
