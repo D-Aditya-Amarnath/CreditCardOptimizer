@@ -297,7 +297,7 @@ You can run the Gradio application natively on your host machine in complete iso
 2. Ensure you have placed your model inside `./models/qwen2.5-coder-3b-instruct-q4_k_m.gguf`.
 3. Run this single command from the root directory:
 ```bash
-python agent4_gradio_rag/app_gradio.py
+python3 agent4_gradio_rag/app_gradio.py
 ```
 
 This will instantly launch the web UI at `http://0.0.0.0:7860`. You can interact fully with the UI, query the local database, and chat with the local model. 
