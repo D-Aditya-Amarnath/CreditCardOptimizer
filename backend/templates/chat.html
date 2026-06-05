@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Chat - OfferAgent{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="card overflow-hidden" style="height: calc(100vh - 200px);">
+        <div class="bg-gray-50 border-b border-gray-200 p-4">
+            <h1 class="text-lg font-semibold">💬 Chat with Offer Agent</h1>
+            <p class="text-xs text-gray-500">Ask about offers, cashback, best cards for purchases</p>
+        </div>
+
+        <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4" style="height: calc(100% - 140px);">
+            <div class="flex gap-3">
+                <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">AI</div>
+                <div class="bg-gray-100 rounded-2xl rounded-tl-none p-4 max-w-lg">
+                    <p class="text-sm">Hi! I'm your Financial Offer Agent. Ask me about credit card offers, cashback deals, or which card to use. Try "best card for Amazon 5000" or "SBI offers on Swiggy".</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="border-t border-gray-200 p-4">
+            <form id="chat-form" class="flex gap-2">
+                <input type="text" id="chat-input" name="message"
+                    placeholder="Type your message..."
+                    class="input flex-1"
+                    autocomplete="off"
+                    hx-post="/api/chat/query"
+                    hx-trigger="submit"
+                    hx-target="#chat-messages"
+                    hx-swap="beforeend">
+                <button type="submit" class="btn btn-primary px-6">Send</button>
+            </form>
+            <div class="flex gap-2 mt-2">
+                <button onclick="quickQuery('best card for Amazon 5000')" class="text-xs px-3 py-1 bg-blue-50 text-blue-700 rounded-full hover:bg-blue-100">Amazon</button>
+                <button onclick="quickQuery('cashback on food delivery')" class="text-xs px-3 py-1 bg-green-50 text-green-700 rounded-full hover:bg-green-100">Food</button>
+                <button onclick="quickQuery('travel offers')" class="text-xs px-3 py-1 bg-purple-50 text-purple-700 rounded-full hover:bg-purple-100">Travel</button>
+                <button onclick="quickQuery('latest HDFC offers')" class="text-xs px-3 py-1 bg-orange-50 text-orange-700 rounded-full hover:bg-orange-100">HDFC</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let isStreaming = false;
+
+function quickQuery(query) {
+    document.getElementById('chat-input').value = query;
+    submitChat();
+}
+
+function submitChat() {
+    const input = document.getElementById('chat-input');
+    const message = input.value.trim();
+    if (!message) return;
+
+    addMessage('user', message);
+    input.value = '';
+
+    fetch('/api/chat/query', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'message=' + encodeURIComponent(message)
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.type === 'command') {
+            handleCommand(data);
+        } else {
+            addMessage('ai', data.answer || 'No response');
+        }
+    })
+    .catch(err => {
+        addMessage('ai', 'Error: ' + err.message);
+    });
+}
+
+function addMessage(role, content) {
+    const container = document.getElementById('chat-messages');
+    const div = document.createElement('div');
+    div.className = 'flex gap-3';
+
+    if (role === 'user') {
+        div.innerHTML = `
+            <div class="ml-auto bg-blue-600 text-white rounded-2xl rounded-tr-none p-4 max-w-lg">
+                <p class="text-sm">${escapeHtml(content)}</p>
+            </div>
+            <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                U
+            </div>
+        `;
+    } else {
+        div.innerHTML = `
+            <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">AI</div>
+            <div class="bg-gray-100 rounded-2xl rounded-tl-none p-4 max-w-lg">
+                <p class="text-sm whitespace-pre-wrap">${escapeHtml(content)}</p>
+            </div>
+        `;
+    }
+
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+}
+
+function handleCommand(data) {
+    if (data.keyword === 'sync') {
+        addMessage('ai', 'Syncing emails... This may take a moment.');
+        fetch('/api/sync', {method: 'POST'})
+            .then(r => r.json())
+            .then(result => {
+                if (result.status === 'already_synced') {
+                    addMessage('ai', 'Already synced today. Check back tomorrow!');
+                } else {
+                    addMessage('ai', `Synced! Found ${result.new_emails} new emails.`);
+                }
+            });
+    } else if (data.intent === 'greeting') {
+        addMessage('ai', 'Hello! Ask me about your credit card offers, cashback deals, or best cards for purchases.');
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+document.getElementById('chat-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    submitChat();
+});
+</script>
+{% endblock %}

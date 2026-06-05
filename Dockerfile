@@ -6,17 +6,15 @@ ENV APP_HOME=/app
 
 WORKDIR $APP_HOME
 
-# Install system deps (sqlite3 for DB inspection)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential sqlite3 \
+    build-essential sqlite3 tesseract-ocr \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy source code
 COPY . .
 
-# Default: run the interactive chat agent
-CMD ["python", "chat.py"]
+EXPOSE 8000
+
+CMD ["python", "run.py"]
