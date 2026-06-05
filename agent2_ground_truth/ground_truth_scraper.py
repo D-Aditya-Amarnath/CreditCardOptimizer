@@ -16,7 +16,8 @@ TARGET_ISSUERS = [
     "DBS Bank India", "Bank of India", "Indian Bank", "Bank of Maharashtra", 
     "Central Bank of India", "Indian Overseas Bank", "UCO Bank", "Punjab & Sind Bank", 
     "Karur Vysya Bank", "Karnataka Bank", "City Union Bank", "Tamilnad Mercantile Bank", 
-    "Dhanlaxmi Bank", "J&K Bank", "SBM Bank India"
+    "Dhanlaxmi Bank", "J&K Bank", "SBM Bank India", "OneCard", "Slice", "Jupiter", 
+    "Uni Cards", "Scapia", "Fi Money", "Tata Capital", "Aditya Birla Finance"
 ]
 OUTPUT_DIR = Path("/tmp/kyc_ground_truth")
 
