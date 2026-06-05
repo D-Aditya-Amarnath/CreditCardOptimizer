@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from agent4_gradio_rag.backend.deps import get_current_user
 from shared_core.models import UserProfile
 from shared_core.database import DatabaseManager
-from services.vector_store import HierarchicalVectorStore
+from shared_core.vector_store import HierarchicalVectorStore
 from shared_core.card_network_service import CardNetworkService
 
 router = APIRouter(prefix="/api/offers")

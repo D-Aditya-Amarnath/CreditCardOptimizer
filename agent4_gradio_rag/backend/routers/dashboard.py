@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 from agent4_gradio_rag.backend.deps import get_current_user
 from shared_core.models import UserProfile
 from shared_core.database import DatabaseManager
-from services.vector_store import HierarchicalVectorStore
+from shared_core.vector_store import HierarchicalVectorStore
 from agent4_gradio_rag.retrieval_auditor import RetrievalAuditor
 
 router = APIRouter()

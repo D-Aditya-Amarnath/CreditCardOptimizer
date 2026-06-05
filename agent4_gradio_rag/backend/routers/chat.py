@@ -71,7 +71,7 @@ async def chat_stream(message: str, user: UserProfile = Depends(get_current_user
             'results_count': result.get('results_count', 0),
             'conflicts': len(result.get('conflicts', [])),
             'intent': result.get('intent', 'search'),
-        })}}\n\n"
+        }})}\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
