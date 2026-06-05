@@ -1,0 +1,50 @@
+/* Minimal custom styles for OfferAgent */
+/* Most styling handled by Tailwind via CDN */
+
+#chat-messages {
+    scrollbar-width: thin;
+    scrollbar-color: #d1d5db transparent;
+}
+
+#chat-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+#chat-messages::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#chat-messages::-webkit-scrollbar-thumb {
+    background-color: #d1d5db;
+    border-radius: 3px;
+}
+
+/* Fix nav active state */
+.nav-link.active {
+    background-color: #2563eb;
+    color: white;
+}
+
+/* Card hover effects */
+.card {
+    transition: box-shadow 0.2s;
+}
+
+.card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Table hover */
+tbody tr:hover {
+    background-color: #f9fafb;
+}
+
+/* Modal animation */
+#email-modal {
+    animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
