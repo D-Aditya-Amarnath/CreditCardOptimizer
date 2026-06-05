@@ -22,3 +22,11 @@ uvicorn
 python-multipart
 passlib
 bcrypt
+modal
+unsloth
+trl
+transformers
+datasets
+accelerate
+peft
+jsonschema
