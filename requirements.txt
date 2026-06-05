@@ -22,3 +22,5 @@ uvicorn
 python-multipart
 passlib
 bcrypt
+gradio>=4,<5
+llama-cpp-python>=0.2.90
