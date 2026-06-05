@@ -55,6 +55,74 @@ The KYC system operates across four distinct phases (Agents) that feed into one 
 3. **The Fine-Tuning Phase (Agent 3):** Generates synthetic data and trains the AI model to understand the outputs of Agent 1 and Agent 2.
 4. **The Interface Phase (Agent 4):** Provides the visual frontend, orchestrating the final RAG pipeline that combines your emails, the ground truth, and the fine-tuned AI to generate a financial recommendation.
 
+### System Architecture Diagram
+
+```mermaid
+graph TD
+    %% Define Styles
+    classDef agent fill:#f9f9f9,stroke:#333,stroke-width:2px;
+    classDef db fill:#e1f5fe,stroke:#0288d1,stroke-width:2px;
+    classDef external fill:#fce4ec,stroke:#c2185b,stroke-width:2px;
+    classDef user fill:#e8f5e9,stroke:#388e3c,stroke-width:2px;
+
+    %% External Sources
+    Inbox["📧 Personal Email (IMAP)"] ::: external
+    BankWeb["🌐 Official Bank Sites (.bank.in)"] ::: external
+    
+    %% Databases
+    SQLite[("🗄️ SQLite Database\n(offers.db)")] ::: db
+    Chroma[("🧠 ChromaDB\n(Vector Rules)")] ::: db
+    
+    %% Agents
+    subgraph "Agent 1: Ingestion & FastMCP"
+        IMAP["IMAP Client"]
+        Sanitizer["Email Sanitizer\n(Removes trackers)"]
+        MCP["FastMCP Server"]
+    end
+    
+    subgraph "Agent 2: Ground Truth Scraper (CrewAI)"
+        Navigator["Navigator Agent"]
+        Extractor["Extractor Agent"]
+        Structurer["Structurer Agent"]
+    end
+    
+    subgraph "Agent 3: Fine-Tuning Pipeline"
+        Llama70["Llama 70B\n(Synthetic Data)"]
+        Unsloth["Unsloth LoRA\n(Fine-tuning)"]
+        GGUF["Qwen 3B GGUF\n(Quantization)"]
+    end
+    
+    subgraph "Agent 4: Gradio RAG Interface"
+        UI["🖥️ Gradio Web UI"]
+        RAG["RAG Engine"]
+        LlamaLocal["🤖 Local Llama Engine"]
+    end
+    
+    %% User
+    User(("👤 User")) ::: user
+
+    %% Connections
+    Inbox -->|Raw HTML| IMAP
+    IMAP --> Sanitizer
+    Sanitizer -->|Sanitized Text| SQLite
+    SQLite <--> MCP
+    
+    BankWeb -->|PDFs & MITC| Navigator
+    Navigator --> Extractor
+    Extractor --> Structurer
+    Structurer -->|Structured JSON| Chroma
+    
+    Llama70 -->|Fake Emails| Unsloth
+    Unsloth -->|PyTorch Weights| GGUF
+    GGUF -->|Local Model File| LlamaLocal
+    
+    User <-->|Prompts / UI| UI
+    UI <--> RAG
+    RAG <-->|Fetch Context| MCP
+    RAG <-->|Similarity Search| Chroma
+    RAG <-->|Generate Answer| LlamaLocal
+```
+
 ---
 
 ## 3. Exhaustive File Directory Breakdown
