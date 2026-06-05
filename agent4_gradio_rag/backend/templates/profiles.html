@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-900">Family Profiles</h1>
+        <button onclick="showCreateModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+            <i class="fas fa-plus mr-2"></i>Add Profile
+        </button>
+    </div>
+
+    <div id="profiles-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for profile in profiles %}
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                        <i class="fas fa-user text-blue-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-lg">{{ profile.name }}</h3>
+                        <p class="text-gray-500 text-sm">{{ profile.email }}</p>
+                    </div>
+                </div>
+                <button onclick="deleteProfile({{ profile.id }})" class="text-gray-400 hover:text-red-500">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+
+            <div class="border-t pt-4">
+                <h4 class="text-sm font-medium text-gray-700 mb-2">Linked Accounts</h4>
+                <div id="accounts-{{ profile.id }}" class="space-y-2">
+                    {% for account in profile.accounts %}
+                    <div class="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
+                        <div class="flex items-center">
+                            <i class="fas fa-envelope text-gray-400 mr-2"></i>
+                            <span class="text-sm">{{ account.account_email }}</span>
+                            {% if account.is_primary %}
+                            <span class="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Primary</span>
+                            {% endif %}
+                        </div>
+                        <button onclick="removeAccount('{{ account.account_email }}')" class="text-gray-400 hover:text-red-500 text-sm">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    {% else %}
+                    <p class="text-gray-400 text-sm italic">No accounts linked</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="mt-4 pt-4 border-t">
+                <button onclick="showLinkModal({{ profile.id }}, '{{ profile.name }}')" 
+                        class="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 text-sm">
+                    <i class="fas fa-link mr-2"></i>Link Gmail Account
+                </button>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-span-full text-center py-12">
+            <i class="fas fa-users text-gray-300 text-5xl mb-4"></i>
+            <p class="text-gray-500">No profiles yet. Create one to get started.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div id="create-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+        <h2 class="text-xl font-bold mb-4">Create Profile</h2>
+        <form id="create-form" onsubmit="createProfile(event)">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <input type="text" name="name" required class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input type="email" name="email" required class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="hideCreateModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Create</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="link-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+        <h2 class="text-xl font-bold mb-4">Link Gmail Account</h2>
+        <p class="text-gray-600 mb-4">Profile: <span id="link-profile-name" class="font-semibold"></span></p>
+        <form id="link-form" onsubmit="linkAccount(event)">
+            <input type="hidden" name="profile_id" id="link-profile-id">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Gmail Address</label>
+                <input type="email" name="account_email" required placeholder="user@gmail.com" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Label (optional)</label>
+                <input type="text" name="account_label" placeholder="Personal, Work, etc." class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="hideLinkModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Link</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showCreateModal() {
+    document.getElementById('create-modal').classList.remove('hidden');
+}
+
+function hideCreateModal() {
+    document.getElementById('create-modal').classList.add('hidden');
+}
+
+function showLinkModal(profileId, profileName) {
+    document.getElementById('link-profile-id').value = profileId;
+    document.getElementById('link-profile-name').textContent = profileName;
+    document.getElementById('link-modal').classList.remove('hidden');
+}
+
+function hideLinkModal() {
+    document.getElementById('link-modal').classList.add('hidden');
+}
+
+async function createProfile(e) {
+    e.preventDefault();
+    const form = e.target;
+    const data = {
+        name: form.name.value,
+        email: form.email.value
+    };
+    
+    const res = await fetch('/api/profiles/', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    });
+    
+    if (res.ok) {
+        location.reload();
+    } else {
+        const err = await res.json();
+        alert('Error: ' + (err.detail || 'Failed to create profile'));
+    }
+}
+
+async function linkAccount(e) {
+    e.preventDefault();
+    const form = e.target;
+    const data = {
+        profile_id: parseInt(form.profile_id.value),
+        account_email: form.account_email.value,
+        account_label: form.account_label.value || null
+    };
+    
+    const res = await fetch('/api/profiles/assign-account', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    });
+    
+    if (res.ok) {
+        location.reload();
+    } else {
+        const err = await res.json();
+        alert('Error: ' + (err.detail || 'Failed to link account'));
+    }
+}
+
+async function deleteProfile(profileId) {
+    if (!confirm('Delete this profile? This cannot be undone.')) return;
+    
+    const res = await fetch(`/api/profiles/${profileId}`, { method: 'DELETE' });
+    if (res.ok) {
+        location.reload();
+    }
+}
+
+async function removeAccount(accountEmail) {
+    if (!confirm('Remove this account?')) return;
+    
+    const res = await fetch(`/api/profiles/accounts/${accountEmail}`, { method: 'DELETE' });
+    if (res.ok) {
+        location.reload();
+    }
+}
+
+async function loadProfiles() {
+    const res = await fetch('/api/profiles/');
+    if (res.ok) {
+        const data = await res.json();
+        renderProfiles(data);
+    }
+}
+
+function renderProfiles(profiles) {
+    const grid = document.getElementById('profiles-grid');
+    if (profiles.length === 0) {
+        grid.innerHTML = `
+            <div class="col-span-full text-center py-12">
+                <i class="fas fa-users text-gray-300 text-5xl mb-4"></i>
+                <p class="text-gray-500">No profiles yet. Create one to get started.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    grid.innerHTML = profiles.map(p => `
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                        <i class="fas fa-user text-blue-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-lg">${p.name}</h3>
+                        <p class="text-gray-500 text-sm">${p.email}</p>
+                    </div>
+                </div>
+                <button onclick="deleteProfile(${p.id})" class="text-gray-400 hover:text-red-500">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+            <div class="border-t pt-4">
+                <h4 class="text-sm font-medium text-gray-700 mb-2">Linked Accounts</h4>
+                ${p.accounts.length ? p.accounts.map(a => `
+                    <div class="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 mb-2">
+                        <div class="flex items-center">
+                            <i class="fas fa-envelope text-gray-400 mr-2"></i>
+                            <span class="text-sm">${a.account_email}</span>
+                            ${a.is_primary ? '<span class="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Primary</span>' : ''}
+                        </div>
+                        <button onclick="removeAccount('${a.account_email}')" class="text-gray-400 hover:text-red-500 text-sm">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `).join('') : '<p class="text-gray-400 text-sm italic">No accounts linked</p>'}
+            </div>
+            <div class="mt-4 pt-4 border-t">
+                <button onclick="showLinkModal(${p.id}, '${p.name}')" 
+                        class="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 text-sm">
+                    <i class="fas fa-link mr-2"></i>Link Gmail Account
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+loadProfiles();
+</script>
+{% endblock %}
