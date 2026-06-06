@@ -70,6 +70,7 @@ class SanitizedEmail:
     account_email: str = ""
     message_id: str = ""
     date_received: str = ""
+    imap_uid: int = 0
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -105,6 +106,7 @@ class EmailSanitizer:
         message_id: str = "",
         date_received: str = "",
         fallback_text: str = "",
+        imap_uid: int = 0,
     ) -> SanitizedEmail:
         html = body_html or fallback_text or ""
         soup = BeautifulSoup(html, "html.parser")
@@ -124,6 +126,7 @@ class EmailSanitizer:
             account_email=account_email,
             message_id=message_id,
             date_received=date_received,
+            imap_uid=imap_uid,
         )
 
     def infer_bank_name(self, sender: str) -> str:

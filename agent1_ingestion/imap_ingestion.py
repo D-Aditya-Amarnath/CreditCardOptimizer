@@ -130,6 +130,7 @@ class ImapIngestionClient:
             message_id=message_id,
             date_received=date_received,
             fallback_text=fallback_text,
+            imap_uid=uid,
         )
 
     def _extract_bodies(self, message: Message) -> tuple[str, str]:

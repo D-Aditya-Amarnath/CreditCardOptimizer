@@ -3,7 +3,6 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import json
-from dataclasses import asdict
 from time import monotonic
 from typing import Optional
 
@@ -11,7 +10,9 @@ from mcp.server.fastmcp import FastMCP
 from mcp.shared.exceptions import McpError
 from mcp.types import ErrorData, INTERNAL_ERROR
 
-from agent1_ingestion.imap_ingestion import ImapIngestionClient, load_imap_accounts_from_env
+from agent1_ingestion.sync_manager import SyncManager
+from shared_core.database import DatabaseManager
+from agent1_ingestion.email_sanitizer import EmailSanitizer
 
 
 class KycEmailContextServer:
@@ -19,7 +20,6 @@ class KycEmailContextServer:
 
     def __init__(self, cache_ttl_seconds: int = 120):
         self.mcp = FastMCP("Know Your Card Local Email Bridge")
-        self.ingestion = ImapIngestionClient()
         self.cache_ttl_seconds = cache_ttl_seconds
         self._cache_loaded_at = 0.0
         self._cache = []
@@ -66,11 +66,29 @@ class KycEmailContextServer:
         if self._cache and now - self._cache_loaded_at < self.cache_ttl_seconds:
             emails = self._cache
         else:
-            accounts = load_imap_accounts_from_env()
-            emails = [
-                asdict(email)
-                for email in self.ingestion.iter_sanitized_emails(accounts, limit_per_account=limit)
-            ]
+            # 1. Trigger delta sync to fetch any newly arrived emails since last UI refresh
+            try:
+                SyncManager().sync(limit_per_account=limit)
+            except Exception as e:
+                print(f"Background Sync Error: {e}")
+
+            # 2. Load latest emails from SQLite (which now contains historical + new delta)
+            db = DatabaseManager()
+            db_emails = db.get_emails_paginated(limit=limit)
+            
+            sanitizer = EmailSanitizer()
+            emails = []
+            for db_email in db_emails:
+                emails.append({
+                    "bank_name": sanitizer.infer_bank_name(db_email.sender),
+                    "subject": db_email.subject,
+                    "clean_body": db_email.body_text,
+                    "sender": db_email.sender,
+                    "account_email": db_email.account_email,
+                    "message_id": db_email.email_id,
+                    "date_received": db_email.date_received.isoformat() if db_email.date_received else "",
+                })
+
             self._cache = emails
             self._cache_loaded_at = now
 
