@@ -156,6 +156,8 @@ class EmailSanitizer:
 
     def _remove_hidden_nodes(self, soup: BeautifulSoup) -> None:
         for tag in list(soup.find_all(True)):
+            if tag.attrs is None:
+                continue
             if tag.has_attr("hidden") or str(tag.get("aria-hidden", "")).lower() == "true":
                 tag.decompose()
                 continue

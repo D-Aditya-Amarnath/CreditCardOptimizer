@@ -15,7 +15,9 @@ def main():
     try:
         new_emails = manager.sync(limit_per_account=50)
     except Exception as e:
-        console.print(f"[red]Error during sync: {e}[/red]")
+        console.print(f"[red]Error during sync:[/red]")
+        import traceback
+        traceback.print_exc()
         return
         
     count = len(new_emails)

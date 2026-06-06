@@ -8,7 +8,11 @@ services:
       - ./offers.db:/app/offers.db
       - ./chroma_db:/app/chroma_db
       - ./models:/app/models
+      - ./agent1_ingestion:/app/agent1_ingestion
+      - ./run_agent1.py:/app/run_agent1.py
     environment:
       - DATABASE_URL=sqlite:///offers.db
       - KYC_GGUF_MODEL_PATH=/app/models/qwen2.5-coder-3b-instruct-q4_k_m.gguf
       - KYC_MCP_COMMAND=python /app/agent1_ingestion/kyc_mcp_server.py
+    env_file:
+      - .env
