@@ -24,6 +24,8 @@ llama-cpp-python>=0.2.90
 # Gradio Frontend App
 gradio>=4,<5
 huggingface-hub<0.27.0
+fastapi<0.113.0
+starlette<0.38.0
 
 # Server-less Cloud Triggering
 modal
