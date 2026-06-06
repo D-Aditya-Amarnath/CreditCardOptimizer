@@ -66,40 +66,40 @@ graph TD
     classDef user fill:#e8f5e9,stroke:#388e3c,stroke-width:2px;
 
     %% External Sources
-    Inbox["📧 Personal Email (IMAP)"] ::: external
-    BankWeb["🌐 Official Bank Sites (.bank.in)"] ::: external
+    Inbox["📧 Personal Email (IMAP)"]
+    BankWeb["🌐 Official Bank Sites (.bank.in)"]
     
     %% Databases
-    SQLite[("🗄️ SQLite Database\n(offers.db)")] ::: db
-    Chroma[("🧠 ChromaDB\n(Vector Rules)")] ::: db
+    SQLite[("🗄️ SQLite Database\n(offers.db)")]
+    Chroma[("🧠 ChromaDB\n(Vector Rules)")]
     
     %% Agents
-    subgraph "Agent 1: Ingestion & FastMCP"
+    subgraph Agent1 ["Agent 1: Ingestion & FastMCP"]
         IMAP["IMAP Client"]
         Sanitizer["Email Sanitizer\n(Removes trackers)"]
         MCP["FastMCP Server"]
     end
     
-    subgraph "Agent 2: Ground Truth Scraper (CrewAI)"
+    subgraph Agent2 ["Agent 2: Ground Truth Scraper (CrewAI)"]
         Navigator["Navigator Agent"]
         Extractor["Extractor Agent"]
         Structurer["Structurer Agent"]
     end
     
-    subgraph "Agent 3: Fine-Tuning Pipeline"
+    subgraph Agent3 ["Agent 3: Fine-Tuning Pipeline"]
         Llama70["Llama 70B\n(Synthetic Data)"]
         Unsloth["Unsloth LoRA\n(Fine-tuning)"]
         GGUF["Qwen 3B GGUF\n(Quantization)"]
     end
     
-    subgraph "Agent 4: Gradio RAG Interface"
+    subgraph Agent4 ["Agent 4: Gradio RAG Interface"]
         UI["🖥️ Gradio Web UI"]
         RAG["RAG Engine"]
         LlamaLocal["🤖 Local Llama Engine"]
     end
     
     %% User
-    User(("👤 User")) ::: user
+    User(("👤 User"))
 
     %% Connections
     Inbox -->|Raw HTML| IMAP
@@ -121,6 +121,12 @@ graph TD
     RAG <-->|Fetch Context| MCP
     RAG <-->|Similarity Search| Chroma
     RAG <-->|Generate Answer| LlamaLocal
+
+    %% Apply Styles
+    class Inbox,BankWeb external;
+    class SQLite,Chroma db;
+    class IMAP,Sanitizer,MCP,Navigator,Extractor,Structurer,Llama70,Unsloth,GGUF,UI,RAG,LlamaLocal agent;
+    class User user;
 ```
 
 ---

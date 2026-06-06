@@ -1,0 +1,38 @@
+# Virtual Environment
+.venv
+.venv/
+venv
+venv/
+env
+env/
+
+# Large Model Files (handled via Docker Compose volumes)
+models
+models/
+*.gguf
+
+# Local Databases (handled via Docker Compose volumes)
+offers.db
+chroma_db
+chroma_db/
+
+# Version Control
+.git
+.git/
+.gitignore
+
+# Environment / Secret Files
+.env
+
+# Python caching
+__pycache__
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.pytest_cache/
+
+# Internal agent metadata/sync logs
+.last_sync
+AGENT_TASK.md

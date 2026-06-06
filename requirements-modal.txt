@@ -1,0 +1,13 @@
+# Agent 2: Ground Truth Scraper
+crewai
+crewai_tools
+scrapfly-sdk
+pypdf
+
+# Agent 3: Fine-Tuning Pipeline
+unsloth
+trl
+transformers
+datasets
+accelerate
+peft

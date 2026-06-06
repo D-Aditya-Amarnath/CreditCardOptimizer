@@ -1,38 +1,28 @@
-google-api-python-client
-google-auth-oauthlib
-google-auth-httplib2
+# Ingestion & Local Database
 sqlalchemy
 pydantic>=2.0
 pydantic-settings
-openai>=1.12.0
 python-dotenv
 beautifulsoup4
 typer
 rich
-chromadb>=0.5.0
-mcp
+jsonschema
 pytesseract
 Pillow
 requests
 httpx
-jinja2
-slowapi
-fastapi
-uvicorn
-python-multipart
-passlib
-bcrypt
-modal
-crewai
-crewai_tools
-scrapfly-sdk
-pypdf
-unsloth
-trl
-transformers
-datasets
-accelerate
-peft
-jsonschema
-gradio>=4,<5
+
+# Model Context Protocol
+mcp
+
+# Vector Database
+chromadb>=0.5.0
+
+# Local LLM Inference
 llama-cpp-python>=0.2.90
+
+# Gradio Frontend App
+gradio>=4,<5
+
+# Server-less Cloud Triggering
+modal
