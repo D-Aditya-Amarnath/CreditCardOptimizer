@@ -1,6 +1,6 @@
 # Ingestion & Local Database
 sqlalchemy
-pydantic>=2.0
+pydantic>=2.0,<2.10
 pydantic-settings
 python-dotenv
 beautifulsoup4
@@ -23,6 +23,7 @@ llama-cpp-python>=0.2.90
 
 # Gradio Frontend App
 gradio>=4,<5
+huggingface-hub<0.27.0
 
 # Server-less Cloud Triggering
 modal
